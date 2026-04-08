@@ -48,7 +48,7 @@ jobs:
           DIFF_DAYS=$(( (NOW_SEC - START_SEC) / 86400 + 1 ))
           
           # 加入 || true 是關鍵：即使測試失敗（Exit Code 1），也會繼續執行後續步驟
-          pytest test_homework_system.py -v --asyncio-mode=auto > test_log{DIFF_DAYS}_$(date +%Y%m%d_%H%M%S).txt || true
+          pytest test_homework_system.py -v --asyncio-mode=auto > test_log day{DIFF_DAYS}_$(date +%Y%m%d_%H%M%S).txt || true
         
       - name: Auto Commit and Push Log
         run: |
@@ -61,6 +61,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No new logs to commit."
           else
-            git commit -m "test_log{DIFF_DAYS}_$(date +%Y%m%d_%H%M%S)"
+            git commit -m "test_log day{DIFF_DAYS}_$(date +%Y%m%d_%H%M%S)"
             git push
           fi
