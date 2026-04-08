@@ -2,7 +2,7 @@
 platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- /opt/hostedtoolcache/Python/3.12.13/x64/bin/python
 cachedir: .pytest_cache
 rootdir: /home/runner/work/homework-system/homework-system/backend
-plugins: anyio-4.13.0, asyncio-1.3.0
+plugins: asyncio-1.3.0, anyio-4.13.0
 asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
 collecting ... collected 21 items
 
@@ -31,7 +31,7 @@ test_homework_system.py::TestExamUpcoming::test_create_exam_outside_semester_ran
 =================================== FAILURES ===================================
 _____ TestExamUpcoming.test_create_exam_outside_semester_range_returns_400 _____
 
-self = <test_homework_system.TestExamUpcoming object at 0x7fb6f71e08c0>
+self = <test_homework_system.TestExamUpcoming object at 0x7f0a20748800>
 
     @pytest.mark.asyncio
     async def test_create_exam_outside_semester_range_returns_400(self):
@@ -71,7 +71,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
                       ^^^^^^^^^^^^^^^^^^^
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <unittest.mock._patch object at 0x7fb6f5c3db20>
+self = <unittest.mock._patch object at 0x7f0a1f4857f0>
 
     def get_original(self):
         target = self.getter()
@@ -99,4 +99,4 @@ E           AttributeError: <module 'routers.exams' from '/home/runner/work/home
 /opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/unittest/mock.py:1437: AttributeError
 =========================== short test summary info ============================
 FAILED test_homework_system.py::TestExamUpcoming::test_create_exam_outside_semester_range_returns_400 - AttributeError: <module 'routers.exams' from '/home/runner/work/homework-system/homework-system/backend/routers/exams.py'> does not have the attribute 'semesters_col'
-========================= 1 failed, 20 passed in 0.59s =========================
+========================= 1 failed, 20 passed in 0.77s =========================
