@@ -778,3 +778,47 @@ class TestExamUpcoming:
                 await create_exam(ExamCreate(**exam))
 
         assert exc.value.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_exam_outside_semester_range_returns_400(self):
+        from fastapi import HTTPException
+        from datetime import datetime
+
+        # 1. 準備 Mock 資料：建立一個學期範圍
+        sem_id = str(ObjectId())
+        mock_semester = {
+            "_id": ObjectId(sem_id),
+            "year": "113",
+            "grade": "大三",
+            "semester": "下學期",
+            "start_date": "2026-02-23",
+            "end_date": "2026-06-20",
+        }
+
+        # 2. 準備非法考試資料：日期在學期開始之前 (2026-01-15)
+        invalid_exam = {
+            "course_id": str(ObjectId()),
+            "semester_id": sem_id,
+            "exam_name": "期首測驗",
+            "exam_date": "2026-01-15",  # 不在 02-23 ~ 06-20 範圍內
+        }
+
+        with (
+            patch("routers.exams.exams_col") as ex_col,
+            patch("routers.exams.semesters_col") as sem_col,
+            patch("routers.exams.courses_col") as c_col,
+        ):
+            # 模擬資料庫行為：能找到對應的學期
+            sem_col.find_one = AsyncMock(return_value=mock_semester)
+            c_col.find_one = AsyncMock(return_value={"course_name": "軟工"})
+
+            from routers.exams import create_exam
+            from models import ExamCreate
+
+            # 3. 執行並預期拋出 400 錯誤
+            with pytest.raises(HTTPException) as exc:
+                await create_exam(ExamCreate(**invalid_exam))
+
+        # 4. 斷言
+        assert exc.value.status_code == 400
+        assert "range" in exc.value.detail or "範圍" in exc.value.detail
