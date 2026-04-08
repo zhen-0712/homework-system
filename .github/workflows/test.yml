@@ -5,13 +5,25 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  # 新增：每天台灣時間早上 8 點自動執行 (UTC 00:00)
+  schedule:
+    - cron: '0 0 * * *'
+  # 新增：允許你在 GitHub 網頁上點擊 "Run workflow" 手動執行
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
+    # 賦予 GitHub Actions 寫入權限，才能把 Log 推回 Repo
+    permissions:
+      contents: write
+
     steps:
       - uses: actions/checkout@v3
+        with:
+          # 取得完整紀錄，確保 Push 順利
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -22,9 +34,29 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
-          pip install pytest pytest-asyncio python-multipart
+          # 補上你剛才測試失敗缺少的套件
+          pip install pytest pytest-asyncio python-multipart 
 
-      - name: Run tests
+      - name: Run tests and Generate Log File
         run: |
           cd backend
-          pytest test_homework_system.py -v --asyncio-mode=auto
+          # 執行測試並產生以當天日期命名的 .txt 檔案
+          # 使用 --tb=short 縮短 Log 長度，方便閱讀
+          pytest test_homework_system.py -v --asyncio-mode=auto > test_log_$(date +%Y%m%d).txt
+        
+      - name: Auto Commit and Push Log
+        run: |
+          # 設定機器人身分
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 將產生的 Log 檔案加入並提交
+          git add backend/test_log_*.txt
+          
+          # 檢查是否有新 Log 需要提交，避免沒有變動時報錯
+          if git diff --staged --quiet; then
+            echo "No new logs to commit."
+          else
+            git commit -m "Auto-generated test log: $(date +%Y%m%d)"
+            git push
+          fi
