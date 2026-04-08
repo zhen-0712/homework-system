@@ -5,9 +5,6 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  # 每天台灣時間早上 8 點自動執行 (UTC 00:00)
-  schedule:
-    - cron: '0 0 * * *'
   # 允許從 GitHub 網頁手動點擊執行
   workflow_dispatch:
 
