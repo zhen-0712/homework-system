@@ -69,6 +69,21 @@ async def upcoming_exams():
 
 @router.post("/", response_model=ExamOut)
 async def create_exam(data: ExamCreate):
+
+    try:
+        input_date = datetime.strptime(data.exam_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid date format. Use YYYY-MM-DD"
+        )
+
+    # 2. Check if the date is in the past
+    if input_date < date.today():
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot create an exam for a past date: {data.exam_date}",
+        )
+
     payload = data.model_dump()
     payload["status"] = "未考"
     payload["score"] = 0
