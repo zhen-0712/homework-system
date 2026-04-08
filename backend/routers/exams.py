@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from bson import ObjectId
 from datetime import datetime, timedelta, date
-from database import exams_col, courses_col
+from database import exams_col, courses_col, semesters_col
 from models import ExamCreate, ExamUpdate, ExamOut
 from fastapi import APIRouter, HTTPException
 
@@ -69,15 +69,27 @@ async def upcoming_exams():
 
 @router.post("/", response_model=ExamOut)
 async def create_exam(data: ExamCreate):
-
     try:
-        input_date = datetime.strptime(data.exam_date, "%Y-%m-%d").date()
+        input_date_dt = datetime.strptime(data.exam_date, "%Y-%m-%d")
+        input_date = input_date_dt.date()
     except ValueError:
         raise HTTPException(
             status_code=400, detail="Invalid date format. Use YYYY-MM-DD"
         )
 
-    # 2. Check if the date is in the past
+    # 2. 檢查學期範圍 (確保 semesters_col 被用到)
+    # 注意：這裡要用 data.semester_id
+    semester = await semesters_col.find_one({"_id": ObjectId(data.semester_id)})
+    if semester:
+        start = datetime.strptime(semester["start_date"], "%Y-%m-%d")
+        end = datetime.strptime(semester["end_date"], "%Y-%m-%d")
+        
+        if not (start <= input_date_dt <= end):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Exam date {data.exam_date} is outside the semester range"
+            )
+    # 3. 檢查是否為過去日期
     if input_date < date.today():
         raise HTTPException(
             status_code=400,
@@ -90,7 +102,6 @@ async def create_exam(data: ExamCreate):
     result = await exams_col.insert_one(payload)
     doc = await exams_col.find_one({"_id": result.inserted_id})
     return _fmt(doc)
-
 
 @router.patch("/{exam_id}", response_model=ExamOut)
 async def update_exam(exam_id: str, data: ExamUpdate):

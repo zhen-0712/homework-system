@@ -754,6 +754,7 @@ class TestExamUpcoming:
             "_id": ObjectId(),
             "course_id": str(ObjectId()),
             "exam_name": "期中考",
+            "semester_id": str(ObjectId()),
             "exam_date": "2025-04-01",
             "exam_time": "",
             "location": "",
