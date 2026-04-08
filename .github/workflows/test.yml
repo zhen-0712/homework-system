@@ -37,7 +37,7 @@ jobs:
         run: |
           cd backend
           # 加入 || true 是關鍵：即使測試失敗（Exit Code 1），也會繼續執行後續步驟
-          pytest test_homework_system.py -v --asyncio-mode=auto > test_log_$(date +%Y%m%d).txt || true
+          pytest test_homework_system.py -v --asyncio-mode=auto > test_log_$(date +%Y%m%d_%H%M%S).txt || true
         
       - name: Auto Commit and Push Log
         run: |
