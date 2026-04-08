@@ -36,6 +36,7 @@ jobs:
       - name: Run tests and Generate Log File
         run: |
           cd backend
+          export TZ='Asia/Taipei'
           # 加入 || true 是關鍵：即使測試失敗（Exit Code 1），也會繼續執行後續步驟
           pytest test_homework_system.py -v --asyncio-mode=auto > test_log_$(date +%Y%m%d_%H%M%S).txt || true
         
@@ -50,6 +51,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No new logs to commit."
           else
-            git commit -m "test_log_$(date +%Y%m%d)"
+            git commit -m "test_log_$(date +%Y%m%d_%H%M%S)"
             git push
           fi
