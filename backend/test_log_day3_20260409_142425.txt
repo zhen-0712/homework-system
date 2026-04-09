@@ -1,0 +1,198 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0 -- /opt/hostedtoolcache/Python/3.12.13/x64/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/work/homework-system/homework-system/backend
+plugins: asyncio-1.3.0, anyio-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 21 items
+
+test_homework_system.py::TestSemester::test_create_semester_success PASSED [  4%]
+test_homework_system.py::TestSemester::test_create_semester_invalid_date_range_returns_400 PASSED [  9%]
+test_homework_system.py::TestSemester::test_create_duplicate_semester_returns_400 PASSED [ 14%]
+test_homework_system.py::TestSemester::test_delete_semester PASSED       [ 19%]
+test_homework_system.py::TestCourse::test_create_course_success PASSED   [ 23%]
+test_homework_system.py::TestCourse::test_create_duplicate_course_returns_400 PASSED [ 28%]
+test_homework_system.py::TestCourse::test_delete_course PASSED           [ 33%]
+test_homework_system.py::TestHomeworkUrgent::test_deadline_today_mark_today PASSED [ 38%]
+test_homework_system.py::TestHomeworkUrgent::test_deadline_day2_mark_urgent PASSED [ 42%]
+test_homework_system.py::TestHomeworkUrgent::test_deadline_day3_mark_empty PASSED [ 47%]
+test_homework_system.py::TestHomeworkUrgent::test_deadline_day7_in_list PASSED [ 52%]
+test_homework_system.py::TestHomeworkUrgent::test_deadline_day8_not_in_list PASSED [ 57%]
+test_homework_system.py::TestExamUpcoming::test_exam_today_mark_today PASSED [ 61%]
+test_homework_system.py::TestExamUpcoming::test_exam_day3_mark_urgent PASSED [ 66%]
+test_homework_system.py::TestExamUpcoming::test_exam_day4_mark_this_week PASSED [ 71%]
+test_homework_system.py::TestExamUpcoming::test_exam_day7_mark_this_week PASSED [ 76%]
+test_homework_system.py::TestExamUpcoming::test_exam_day8_mark_empty PASSED [ 80%]
+test_homework_system.py::TestExamUpcoming::test_exam_day14_in_list PASSED [ 85%]
+test_homework_system.py::TestExamUpcoming::test_exam_day15_not_in_list PASSED [ 90%]
+test_homework_system.py::TestExamUpcoming::test_create_exam_with_past_date FAILED [ 95%]
+test_homework_system.py::TestExamUpcoming::test_create_exam_outside_semester_range_returns_400 PASSED [100%]
+
+=================================== FAILURES ===================================
+_______________ TestExamUpcoming.test_create_exam_with_past_date _______________
+
+self = <test_homework_system.TestExamUpcoming object at 0x7f42ad744e30>
+
+    @pytest.mark.asyncio
+    async def test_create_exam_with_past_date(self):
+        from datetime import datetime, timedelta
+        from fastapi import HTTPException
+    
+        TODAY = datetime(2025, 5, 1)
+        FIXED_TODAY = TODAY.date()
+    
+        class FakeDatetime:
+            @staticmethod
+            def now():
+                return TODAY
+    
+            @staticmethod
+            def strptime(s, fmt):
+                return datetime.strptime(s, fmt)
+    
+        class FakeDate:
+            @staticmethod
+            def today():
+                return FIXED_TODAY
+    
+        exam = {
+            "_id": ObjectId(),
+            "course_id": str(ObjectId()),
+            "exam_name": "期中考",
+            "semester_id": str(ObjectId()),
+            "exam_date": "2025-04-01",
+            "exam_time": "",
+            "location": "",
+            "scope": "",
+            "notes": "",
+            "status": "未考",
+            "score": 0,
+        }
+        course = {"_id": ObjectId(), "course_name": "軟體工程實務"}
+    
+        with (
+            patch("routers.exams.exams_col") as ex_col,
+            patch("routers.exams.courses_col") as c_col,
+            patch("routers.exams.datetime", FakeDatetime),
+            patch("routers.exams.date", FakeDate),
+            patch("routers.exams.timedelta", timedelta),
+        ):
+            from routers.exams import create_exam
+            from models import ExamCreate
+    
+            with pytest.raises(HTTPException) as exc:
+>               await create_exam(ExamCreate(**exam))
+
+test_homework_system.py:779: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+routers/exams.py:82: in create_exam
+    semester = await semesters_col.find_one({"_id": ObjectId(data.semester_id)})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/collection.py:1755: in find_one
+    for result in cursor.limit(-1):
+                  ^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:1289: in __next__
+    return self.next()
+           ^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:1265: in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:1213: in _refresh
+    self._send_message(q)
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/cursor.py:1108: in _send_message
+    response = client._run_operation(
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/_csot.py:125: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:1938: in _run_operation
+    return self._retryable_read(
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2048: in _retryable_read
+    return self._retry_internal(
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/_csot.py:125: in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2014: in _retry_internal
+    ).run()
+      ^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2763: in run
+    return self._read() if self._is_read else self._write()
+           ^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2908: in _read
+    self._server = self._get_server()
+                   ^^^^^^^^^^^^^^^^^^
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:2856: in _get_server
+    return self._client._select_server(
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/mongo_client.py:1833: in _select_server
+    server = topology.select_server(
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/topology.py:428: in select_server
+    server = self._select_server(
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/topology.py:402: in _select_server
+    servers = self.select_servers(
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/topology.py:298: in select_servers
+    server_descriptions = self._select_servers_loop(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Topology <TopologyDescription id: 69d7461b4f7a641af70c8e90, topology_type: Unknown, servers: [<ServerDescription ('lo...17: [Errno 111] Connection refused (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>>
+selector = Primary(), timeout = 30, operation = 'find', operation_id = None
+address = None, deprioritized_servers = []
+
+    def _select_servers_loop(
+        self,
+        selector: Callable[[Selection], Selection],
+        timeout: float,
+        operation: str,
+        operation_id: Optional[int],
+        address: Optional[_Address],
+        deprioritized_servers: Optional[list[Server]] = None,
+    ) -> list[ServerDescription]:
+        """select_servers() guts. Hold the lock when calling this."""
+        now = time.monotonic()
+        end_time = now + timeout
+        logged_waiting = False
+    
+        if _SERVER_SELECTION_LOGGER.isEnabledFor(logging.DEBUG):
+            _debug_log(
+                _SERVER_SELECTION_LOGGER,
+                message=_ServerSelectionStatusMessage.STARTED,
+                selector=selector,
+                operation=operation,
+                operationId=operation_id,
+                topologyDescription=self.description,
+                clientId=self.description._topology_settings._topology_id,
+            )
+    
+        server_descriptions = self._description.apply_selector(
+            selector,
+            address,
+            custom_selector=self._settings.server_selector,
+            deprioritized_servers=[server.description for server in deprioritized_servers]
+            if deprioritized_servers
+            else None,
+        )
+    
+        while not server_descriptions:
+            # No suitable servers.
+            if timeout == 0 or now > end_time:
+                if _SERVER_SELECTION_LOGGER.isEnabledFor(logging.DEBUG):
+                    _debug_log(
+                        _SERVER_SELECTION_LOGGER,
+                        message=_ServerSelectionStatusMessage.FAILED,
+                        selector=selector,
+                        operation=operation,
+                        operationId=operation_id,
+                        topologyDescription=self.description,
+                        clientId=self.description._topology_settings._topology_id,
+                        failure=self._error_message(selector),
+                    )
+>               raise ServerSelectionTimeoutError(
+                    f"{self._error_message(selector)}, Timeout: {timeout}s, Topology Description: {self.description!r}"
+                )
+E               pymongo.errors.ServerSelectionTimeoutError: localhost:27017: [Errno 111] Connection refused (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 69d7461b4f7a641af70c8e90, topology_type: Unknown, servers: [<ServerDescription ('localhost', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('localhost:27017: [Errno 111] Connection refused (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+
+/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/pymongo/synchronous/topology.py:359: ServerSelectionTimeoutError
+=========================== short test summary info ============================
+FAILED test_homework_system.py::TestExamUpcoming::test_create_exam_with_past_date - pymongo.errors.ServerSelectionTimeoutError: localhost:27017: [Errno 111] Connection refused (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 69d7461b4f7a641af70c8e90, topology_type: Unknown, servers: [<ServerDescription ('localhost', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('localhost:27017: [Errno 111] Connection refused (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+======================== 1 failed, 20 passed in 30.95s =========================
