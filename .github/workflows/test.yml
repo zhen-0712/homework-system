@@ -49,51 +49,57 @@ jobs:
           echo DIFF_DAYS=%DIFF_DAYS% >> %GITHUB_ENV%
       
       - name: Run Robotiive Tasks (ordered + single log)
-        shell: cmd 
+        shell: powershell
         run: |
-          setlocal enabledelayedexpansion
           cd backend
 
-          set HH=%TIME:~0,2%
-          if "%HH:~0,1%"==" " set HH=0%HH:~1,1%
+          $day = $env:DIFF_DAYS
+          $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+          $LOG = "robotiive_log_day${day}_${timestamp}.txt"
+          $FAIL = 0
 
-          set LOG=robotiive_log_day${{ env.DIFF_DAYS }}_%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%_%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%.txt
-          set FAIL=0
+          "==============================" | Out-File $LOG
+          "Robotiive Test Start"          | Out-File $LOG -Append
+          "==============================" | Out-File $LOG -Append
 
-          echo ============================== > %LOG%
-          echo Robotiive Test Start >> %LOG%
-          echo ============================== >> %LOG%
-
-          for %%T in (
-            test_create_semester_success test_create_semester_invalid_date_range_returns_400 test_create_duplicate_semester_returns_400 test_delete_semester test_create_course_success test_create_duplicate_course_returns_400 test_delete_course test_create_homework_success
-          ) do (
-
-            echo. >> %LOG%
-            echo Running %%T... >> %LOG%
-            echo ------------------------------ >> %LOG%
-
-            ..\tools\Robotiive_runner.exe term_project %%T >> %LOG% 2>&1
-
-            if errorlevel 1 (
-                echo [FAIL] %%T >> %LOG%
-                set FAIL=1
-            ) else (
-                echo [PASS] %%T >> %LOG%
-            )
+          $tests = @(
+            "test_create_semester_success",
+            "test_create_semester_invalid_date_range_returns_400",
+            "test_create_duplicate_semester_returns_400",
+            "test_delete_semester",
+            "test_create_course_success",
+            "test_create_duplicate_course_returns_400",
+            "test_delete_course",
+            "test_create_homework_success"
           )
 
-          echo. >> %LOG%
-          echo ============================== >> %LOG%
+          foreach ($T in $tests) {
+            ""                        | Out-File $LOG -Append
+            "Running $T..."           | Out-File $LOG -Append
+            "------------------------------" | Out-File $LOG -Append
 
-          if !FAIL!==0 (
-              echo ALL TASKS PASSED >> %LOG%
-          ) else (
-              echo SOME TASKS FAILED >> %LOG%
-          )
+            & ..\tools\Robotiive_runner.exe term_project $T >> $LOG 2>&1
 
-          echo ============================== >> %LOG%
+            if ($LASTEXITCODE -ne 0) {
+              "[FAIL] $T" | Out-File $LOG -Append
+              $FAIL = 1
+            } else {
+              "[PASS] $T" | Out-File $LOG -Append
+            }
+          }
 
-          exit /b !FAIL!
+          ""                          | Out-File $LOG -Append
+          "==============================" | Out-File $LOG -Append
+
+          if ($FAIL -eq 0) {
+            "ALL TASKS PASSED"        | Out-File $LOG -Append
+          } else {
+            "SOME TASKS FAILED"       | Out-File $LOG -Append
+          }
+
+          "==============================" | Out-File $LOG -Append
+
+          exit $FAIL
 
       - name: Auto Commit and Push Log
         # 只有在「非 PR」的情況下才自動 Push，避免 PR 期間產生過多重複 Commit
