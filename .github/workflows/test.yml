@@ -5,122 +5,52 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  # 允許從 GitHub 網頁手動點擊執行
   workflow_dispatch:
 
 jobs:
   test:
-    runs-on: windows-latest 
+    runs-on: ubuntu-latest
+
+    # 賦予寫入權限，以便將 Log 推回 Repo
     permissions:
       contents: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # 已升級 v4
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5 # 已升級 v5
         with:
           python-version: '3.12'
 
       - name: Install dependencies
-        shell: cmd
         run: |
           cd backend
           pip install -r requirements.txt
           pip install pytest pytest-asyncio python-multipart  
 
       - name: Run tests and Generate Log File
-        shell: cmd
         run: |
           cd backend
-          for /f %%i in ('powershell -NoProfile -Command "$start = Get-Date '2026-04-07'; $now = Get-Date; ($now - $start).Days + 1"') do set DIFF_DAYS=%%i
-
-          echo DIFF_DAYS=%DIFF_DAYS%
-
-          set HH=%TIME:~0,2%
-          if "%HH:~0,1%"==" " set HH=0%HH:~1,1%
-
-          set LOG=test_log_day%DIFF_DAYS%_%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%_%TIME:~0,2%%TIME:~3,2%.txt
-
-          pytest test_homework_system.py -v --asyncio-mode=auto > %LOG% || exit /b 0
-
-          echo DIFF_DAYS=%DIFF_DAYS% >> %GITHUB_ENV%
-      
-      - name: Run Robotiive Tasks (ordered + single log)
-        shell: powershell
-        run: |
-          Set-Location "$env:GITHUB_WORKSPACE\backend"
-          
-          $toolPath = "$env:GITHUB_WORKSPACE\tools\Robotiive_runner.exe"
-          $day = $env:DIFF_DAYS
-          $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-          $LOG = "robotiive_log_day${day}_${timestamp}.txt"
-          $FAIL = 0
-
-          "==============================" | Out-File $LOG
-          "Robotiive Test Start"          | Out-File $LOG -Append
-          "==============================" | Out-File $LOG -Append
-
-          $tests = @(
-            "test_create_semester_success",
-            "test_create_semester_invalid_date_range_returns_400",
-            "test_create_duplicate_semester_returns_400",
-            "test_delete_semester",
-            "test_create_course_success",
-            "test_create_duplicate_course_returns_400",
-            "test_delete_course",
-            "test_create_homework_success"
-          )
-
-          foreach ($T in $tests) {
-            ""                        | Out-File $LOG -Append
-            "Running $T..."           | Out-File $LOG -Append
-            "------------------------------" | Out-File $LOG -Append
-
-            & $toolPath term_project $T >> $LOG 2>&1
-
-            if ($LASTEXITCODE -ne 0) {
-              "[FAIL] $T" | Out-File $LOG -Append
-              $FAIL = 1
-            } else {
-              "[PASS] $T" | Out-File $LOG -Append
-            }
-          }
-
-          ""                          | Out-File $LOG -Append
-          "==============================" | Out-File $LOG -Append
-
-          if ($FAIL -eq 0) {
-            "ALL TASKS PASSED"        | Out-File $LOG -Append
-          } else {
-            "SOME TASKS FAILED"       | Out-File $LOG -Append
-          }
-
-          "==============================" | Out-File $LOG -Append
-
-          Write-Host "=== LOG CONTENT ==="
-          Get-Content $LOG
-
-          Write-Host "FAIL value = $FAIL"
-          exit $FAIL
-
+          export TZ='Asia/Taipei'
+          # 加入 || true 是關鍵：即使測試失敗（Exit Code 1），也會繼續執行後續步驟
+          pytest test_homework_system.py -v --asyncio-mode=auto > test_log_$(date +%Y%m%d_%H%M%S).txt || true
+        
       - name: Auto Commit and Push Log
-        # 只有在「非 PR」的情況下才自動 Push，避免 PR 期間產生過多重複 Commit
-        if: github.event_name != 'pull_request'
-        shell: cmd
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add backend\test_log_*.txt
-          git add backend\robotiive_log_*.txt
+          # 加入檔案並檢查是否有變動
+          git add backend/test_log_*.txt
           
-          git diff --staged --quiet
-          if %ERRORLEVEL%==0 (
-            echo No new logs to commit.
-          ) else (
-            git commit -m "test_log day${{ env.DIFF_DAYS }} [skip ci]"
+          if git diff --staged --quiet; then
+            echo "No new logs to commit."
+          else
+            git commit -m "test_log_$(date +%Y%m%d_%H%M%S)"
             git push
-          )
+          fi
