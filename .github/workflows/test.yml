@@ -51,8 +51,9 @@ jobs:
       - name: Run Robotiive Tasks (ordered + single log)
         shell: powershell
         run: |
-          cd backend
-
+          Set-Location "$env:GITHUB_WORKSPACE\backend"
+          
+          $toolPath = "$env:GITHUB_WORKSPACE\tools\Robotiive_runner.exe"
           $day = $env:DIFF_DAYS
           $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
           $LOG = "robotiive_log_day${day}_${timestamp}.txt"
@@ -78,7 +79,7 @@ jobs:
             "Running $T..."           | Out-File $LOG -Append
             "------------------------------" | Out-File $LOG -Append
 
-            & ..\tools\Robotiive_runner.exe term_project $T >> $LOG 2>&1
+            & $toolPath term_project $T >> $LOG 2>&1
 
             if ($LASTEXITCODE -ne 0) {
               "[FAIL] $T" | Out-File $LOG -Append
