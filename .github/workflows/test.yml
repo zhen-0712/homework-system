@@ -65,14 +65,7 @@ jobs:
           echo ============================== >> %LOG%
 
           for %%T in (
-            test_create_semester_success
-            test_create_semester_invalid_date_range_returns_400
-            test_create_duplicate_semester_returns_400
-            test_delete_semester
-            test_create_course_success
-            test_create_duplicate_course_returns_400
-            test_delete_course
-            test_create_homework_success
+            test_create_semester_success test_create_semester_invalid_date_range_returns_400 test_create_duplicate_semester_returns_400 test_delete_semester test_create_course_success test_create_duplicate_course_returns_400 test_delete_course test_create_homework_success
           ) do (
 
             echo. >> %LOG%
