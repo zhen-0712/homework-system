@@ -35,10 +35,7 @@ jobs:
         shell: cmd
         run: |
           cd backend
-          for /f %%i in ('powershell -NoProfile -Command ^
-            "$start = Get-Date '2026-04-07'; ^
-            $now = Get-Date; ^
-            ($now - $start).Days + 1"') do set DIFF_DAYS=%%i
+          for /f %%i in ('powershell -NoProfile -Command "$start = Get-Date '2026-04-07'; $now = Get-Date; ($now - $start).Days + 1"') do set DIFF_DAYS=%%i
 
           echo DIFF_DAYS=%DIFF_DAYS%
 
