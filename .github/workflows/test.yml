@@ -100,6 +100,9 @@ jobs:
 
           "==============================" | Out-File $LOG -Append
 
+          Write-Host "=== LOG CONTENT ==="
+          Get-Content $LOG
+
           Write-Host "FAIL value = $FAIL"
           exit $FAIL
 
