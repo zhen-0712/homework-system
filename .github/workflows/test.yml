@@ -41,7 +41,7 @@ jobs:
             ($now - $start).Days + 1"') do set DIFF_DAYS=%%i
 
           echo DIFF_DAYS=%DIFF_DAYS%
-          
+
           set HH=%TIME:~0,2%
           if "%HH:~0,1%"==" " set HH=0%HH:~1,1%
 
@@ -49,17 +49,18 @@ jobs:
 
           pytest test_homework_system.py -v --asyncio-mode=auto > %LOG% || exit /b 0
 
-          echo DIFF_DAYS=%DIFF_DAYS%>> %GITHUB_ENV%
+          echo DIFF_DAYS=%DIFF_DAYS% >> %GITHUB_ENV%
       
       - name: Run Robotiive Tasks (ordered + single log)
         shell: cmd 
         run: |
+          setlocal enabledelayedexpansion
           cd backend
 
           set HH=%TIME:~0,2%
           if "%HH:~0,1%"==" " set HH=0%HH:~1,1%
 
-          set LOG=robotiive_log_day%DIFF_DAYS%_%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%_%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%.txt
+          set LOG=robotiive_log_day${{ env.DIFF_DAYS }}_%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%_%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%.txt
           set FAIL=0
 
           echo ============================== > %LOG%
@@ -94,7 +95,7 @@ jobs:
           echo. >> %LOG%
           echo ============================== >> %LOG%
 
-          if %FAIL%==0 (
+          if !FAIL!==0 (
               echo ALL TASKS PASSED >> %LOG%
           ) else (
               echo SOME TASKS FAILED >> %LOG%
@@ -102,7 +103,7 @@ jobs:
 
           echo ============================== >> %LOG%
 
-          exit /b %FAIL%
+          exit /b !FAIL!
 
       - name: Auto Commit and Push Log
         # 只有在「非 PR」的情況下才自動 Push，避免 PR 期間產生過多重複 Commit
@@ -112,14 +113,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add backend/test_log_*.txt
-          git add backend/robotiive_log_*.txt
+          git add backend\test_log_*.txt
+          git add backend\robotiive_log_*.txt
           
           git diff --staged --quiet
-          if %ERRORLEVEL%==0
-            echo "No new logs to commit."
-          else
-            # 加上 [skip ci] 避免無限迴圈
-            git commit -m "test_log day%DIFF_DAYS% [skip ci]"
+          if %ERRORLEVEL%==0 (
+            echo No new logs to commit.
+          ) else (
+            git commit -m "test_log day${{ env.DIFF_DAYS }} [skip ci]"
             git push
-          fi
+          )
