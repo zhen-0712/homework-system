@@ -12,14 +12,14 @@ const MARK_STYLE = {
 }
 
 function getMarkStyle(mark) {
-  return MARK_STYLE[mark] || MARK_STYLE.normal
+  if (mark === '今天') return MARK_STYLE.today
+  if (mark === '緊急') return MARK_STYLE.urgent
+  if (mark === '本週') return MARK_STYLE.week
+  return MARK_STYLE.normal
 }
 
 function markLabel(mark) {
-  if (mark === 'today')  return '今天'
-  if (mark === 'urgent') return '緊急'
-  if (mark === 'week')   return '本週'
-  return ''
+  return mark || ''
 }
 
 function fetchExams(setter) {

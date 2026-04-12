@@ -21,7 +21,7 @@ async def list_homeworks(course_id: str = None):
 @router.get("/urgent")
 async def urgent_homeworks():
     """本週待辦（7天內）"""
-    today = datetime.now()
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     week_end = today + timedelta(days=7)
     docs = await homeworks_col.find({"status": {"$ne": "已完成"}}).to_list(1000)
     result = []
@@ -34,7 +34,7 @@ async def urgent_homeworks():
                 course_name = course["course_name"] if course else "未知課程"
                 if days_left == 0:
                     mark = "今天"
-                elif days_left <= 2:
+                elif days_left <= 3:
                     mark = "緊急"
                 else:
                     mark = ""
