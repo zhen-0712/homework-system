@@ -58,7 +58,7 @@ class HomeworkOut(HomeworkCreate):
 # ── 考試 ────────────────────────────────────────────────────────
 class ExamCreate(BaseModel):
     course_id: str
-    semester_id: str
+    semester_id: str | None = None
     exam_name: str
     exam_date: str
     exam_time: Optional[str] = ""

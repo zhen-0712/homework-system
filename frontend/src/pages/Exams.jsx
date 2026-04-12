@@ -35,7 +35,7 @@ export default function Exams() {
   const submit = async () => {
     if (!form.exam_name || !form.exam_date || !selectedCourse) { setMsg('請填寫必要欄位'); return }
     try {
-      await createExam({ ...form, course_id: selectedCourse })
+      await createExam({ ...form, course_id: selectedCourse, semester_id: selectedSem })
       setMsg('ok')
       setForm({ exam_name: '', exam_date: '', exam_time: '', location: '', scope: '', notes: '' })
       getExams(selectedCourse).then(setExams)
