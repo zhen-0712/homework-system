@@ -11,12 +11,14 @@ const MARK_STYLE = {
 }
 
 function getMarkStyle(mark) {
-  return MARK_STYLE[mark] || MARK_STYLE.normal
+  if (mark === '今天') return MARK_STYLE.today
+  if (mark === '緊急') return MARK_STYLE.urgent
+  return MARK_STYLE.normal
 }
 
 function markLabel(mark) {
-  if (mark === 'today')  return '今天'
-  if (mark === 'urgent') return '緊急'
+  if (mark === '今天') return '今天'
+  if (mark === '緊急') return '緊急'
   return ''
 }
 
