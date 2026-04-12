@@ -52,5 +52,5 @@ jobs:
             echo "No new logs to commit."
           else
             git commit -m "test_log_$(date +%Y%m%d_%H%M%S)"
-            git push
+            git push origin HEAD:${{ github.head_ref || github.ref_name }}
           fi
