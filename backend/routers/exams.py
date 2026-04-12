@@ -27,7 +27,7 @@ async def list_exams(course_id: str = None):
 @router.get("/upcoming")
 async def upcoming_exams():
     """未來兩週考試提醒"""
-    today = datetime.now()
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     two_weeks = today + timedelta(days=14)
     docs = await exams_col.find({"status": "未考"}).to_list(500)
     result = []
